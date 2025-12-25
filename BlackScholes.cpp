@@ -52,12 +52,14 @@ std::optional<Greeks> BlackScholes::calculate(const Option& option, double S, do
     g.vega = S * pdf_d1 * sqrtT * 0.01; // change per 1% vol
 
     if (type == OptionType::Call) {
+        g.prob_ITM = cdf_d2; // N(d2) probability of finishing ITM
         g.premium = S * cdf_d1 - K * exp_rT * cdf_d2;
         g.delta = cdf_d1;
         g.rho = K * T * exp_rT * cdf_d2 * 0.01; // change per 1% vol
         g.theta = (double)(-(S * normalPDF(d1) * sigma) / (2 * sqrtT) - r * K * exp_rT * cdf_d2) / DAYS_IN_YEAR;   // daily theta
 
     } else { // Put
+        g.prob_ITM = cdf_neg_d2; // N(-d2) probability of finishing ITM
         g.premium = K * exp_rT * cdf_neg_d2 - S * cdf_neg_d1;
         g.delta = cdf_d1 - 1.0;
         g.rho = -K * T * exp_rT * cdf_neg_d2 * 0.01; // change per 1% vol
