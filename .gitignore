@@ -1,0 +1,28 @@
+/build/
+/cmake-build-debug/
+/cmake-build-release/
+/cmake-build-*
+
+
+*.o
+*.obj
+
+*.lib
+*.dll
+*.dylib
+
+
+.idea/
+
+# cmake 
+cmake-build-*/
+
+.vscode/
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+
+# temp files
+*.log
+*.tmp
+*.temp
