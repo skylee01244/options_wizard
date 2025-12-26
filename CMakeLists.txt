@@ -10,6 +10,7 @@ add_executable(options_pricing_model
         Option.cpp
         Tests/ParityTest.h
         Tests/ParityTest.cpp
+        OptionWizard.cpp
 )
 
 target_include_directories(options_pricing_model PRIVATE ${CMAKE_SOURCE_DIR}/Headers)
