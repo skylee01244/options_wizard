@@ -83,7 +83,7 @@ std::optional<double> BlackScholes::calculateIV(const Option& option, double S, 
     double high_v = 5.0;
     for (int i = 0; i < 30; ++i) {
         double mid = low_v + (high_v - low_v) / 2.0;
-        std::optional<Greeks> greeks = calculate(option, S, r, mid);
+        std::optional<Greeks> greeks = calculate(option.getStrike(), option.getTimeToExpiry(), option.getType(), S, r, sigma);
         double price = greeks ? greeks->premium : 0.0;
 
         if (std::abs(price - marketPrice) < EPSILON) return mid;
