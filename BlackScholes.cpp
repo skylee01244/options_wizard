@@ -55,3 +55,32 @@ std::optional<Greeks> BlackScholes::calculate(const Option& option, double S, do
 
     return g;
 }
+
+std::optional<double> BlackScholes::calculateIV(const Option& option, double S, double marketPrice, double r) {
+    constexpr int MAX_ITERATIONS = 100;
+    constexpr double EPSILON = 1e-6;
+    double sigma = 0.2;
+
+    for (int i{} ; i < MAX_ITERATIONS; i++) {
+        std::optional<Greeks> result = calculate(option, S, r, sigma);
+        if (!result) return std::nullopt;
+
+        double price = result->premium;
+        double vega = result->vega * 100.0;
+
+        double diff = price - marketPrice;
+        if (std::abs(diff) < EPSILON) {
+            return sigma;
+        }
+
+        if (std::abs(vega) < 1e-8) {
+            return std::nullopt;
+        }
+
+        sigma = sigma - (diff / vega);
+
+        if (sigma <= 0.0) sigma = 1e-5;
+    }
+
+    return std::nullopt;
+}
