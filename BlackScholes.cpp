@@ -58,7 +58,7 @@ std::optional<double> BlackScholes::calculateIV(const Option& option, double S, 
     double sigma = 0.2;
 
     for (int i{} ; i < MAX_ITERATIONS; i++) {
-        std::optional<Greeks> result = calculate(option, S, r, sigma);
+        std::optional<Greeks> result = calculate(option.getStrike(), option.getTimeToExpiry(), option.getType(), S, r, sigma);
         if (!result) return std::nullopt;
 
         double price = result->premium;
