@@ -1,6 +1,4 @@
 #pragma once
-#ifndef OPTIONS_PRICING_MODEL_OPTION_H
-#define OPTIONS_PRICING_MODEL_OPTION_H
 
 enum class OptionType {
     Call,
@@ -20,6 +18,3 @@ public:
     [[nodiscard]] double getTimeToExpiry() const;
     [[nodiscard]] OptionType getType() const;
 };
-
-
-#endif //OPTIONS_PRICING_MODEL_OPTION_H
