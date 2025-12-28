@@ -1,4 +1,4 @@
-#include "ParityTest.h"
+#include "BlackScholes.h"
 #include <iostream>
 #include <cmath>
 
@@ -19,4 +19,25 @@ void checkPutCallParity(const Greeks& callGreeks, const Greeks& putGreeks, const
         std::cout << "Parity Violated. Arbitrage opportunity.\n";
     }
     return;
+}
+
+inline void runParityTest() {
+
+    double S = 100.0;
+    double K = 100.0;
+    double T = 1.0;
+    double r = 0.05;
+    double sigma = 0.30;
+
+    Option callOption(S, T, OptionType::Call);
+    Option putOption(S, T, OptionType::Put);
+
+    std::optional<Greeks> callGreeks = BlackScholes::calculate(K, T, OptionType::Call, S, r, sigma);
+    std::optional<Greeks> putGreeks  = BlackScholes::calculate(K, T, OptionType::Put,  S, r, sigma);
+
+    if (callGreeks && putGreeks) {
+        checkPutCallParity(*callGreeks, *putGreeks, callOption, S, r);
+    } else {
+        std::cout << "Failed Parity.\n";
+    }
 }
