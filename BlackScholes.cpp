@@ -82,5 +82,19 @@ std::optional<double> BlackScholes::calculateIV(const Option& option, double S, 
         if (sigma <= 0.0) sigma = 1e-5;
     }
 
-    return std::nullopt;
+    // Bisection Method
+    double low_v = 0.001;
+    double high_v = 5.0;
+    for (int i = 0; i < 30; ++i) {
+        double mid = low_v + (high_v - low_v) / 2.0;
+        std::optional<Greeks> greeks = calculate(option, S, r, mid);
+        double price = greeks ? greeks->premium : 0.0;
+
+        if (std::abs(price - marketPrice) < EPSILON) return mid;
+
+        if (price < marketPrice) low_v = mid;
+        else high_v = mid;
+    }
+
+    return (low_v + high_v) / 2.0;
 }
