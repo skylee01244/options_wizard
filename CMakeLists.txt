@@ -8,9 +8,11 @@ add_executable(options_pricing_model
         main.cpp
         BlackScholes.cpp
         Option.cpp
-        Tests/ParityTest.h
-        Tests/ParityTest.cpp
         OptionWizard.cpp
+        Headers/Strategy.h
+        Strategy.cpp
+        Tests/FiniteDifferenceTest.h
+        Tests/ParityTest.h
 )
 
 target_include_directories(options_pricing_model PRIVATE ${CMAKE_SOURCE_DIR}/Headers)
