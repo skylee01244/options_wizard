@@ -1,7 +1,6 @@
 #include "ParityTest.h"
 #include <iostream>
 #include <cmath>
-#include <iomanip>
 
 // C + K*e^(-rT) = P + S
 void checkPutCallParity(const Greeks& callGreeks, const Greeks& putGreeks, const Option& callOption, double spot, double r) {
