@@ -9,7 +9,7 @@
 #include <future>
 #include <thread>
 
-double getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, double sigma) {
+double OptionWizard::getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, double sigma) {
     Option option(i_option.getStrike(), futureTimeRemaining, i_option.getType());
 
     std::optional<Greeks> greeks = BlackScholes::calculate(option, futureSpot, r, sigma);
@@ -29,7 +29,6 @@ result OptionWizard::simulateStrategy(const Option &leg1, int quantity1, std::op
         totalCost += greeks2->premium * quantity2;
     }
 
-    // 2. Setup Simulation Constraints
     double timeToTarget = daysToTarget / static_cast<double>(gbl::TRADING_DAYS);
     double timeRemaining = leg1.getTimeToExpiry() - timeToTarget;
 
