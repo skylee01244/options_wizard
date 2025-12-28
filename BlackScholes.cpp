@@ -13,11 +13,7 @@ double BlackScholes::normalCDF(double x) {
     return 0.5 * (1.0 + std::erf(x / std::sqrt(2.0)));
 }
 
-std::optional<Greeks> BlackScholes::calculate(const Option& option, double S, double r, double sigma) {
-    double K = option.getStrike();
-    double T = option.getTimeToExpiry();
-    OptionType type = option.getType();
-
+std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType type, double S, double r, double sigma) {
     if (T <= 0 || S <= 0 || K <= 0 || sigma < 0) {
         return std::nullopt;
     }
