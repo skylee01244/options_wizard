@@ -2,6 +2,8 @@
 #include <optional>
 #include <string>
 #include "Option.h"
+#include "Strategy.h"
+#include "Greeks.h"
 
 struct result {
     std::string strategyName;
@@ -9,6 +11,7 @@ struct result {
     double projectedValue;
     double profitPercent;
     double pop;
+    Greeks netGreeks;
 };
 
 
@@ -17,5 +20,5 @@ private:
     static double getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, double sigma);
 
 public:
-    static result simulateStrategy(const Option& leg1, int quantity1, std::optional<Option> leg2, int quantity2, double currentPrice, double targetPrice, double daysToTarget, double r, double sigma);
+    static result simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, double sigma);
 };
