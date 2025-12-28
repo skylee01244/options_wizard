@@ -36,7 +36,7 @@ std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType typ
     g.gamma = pdf_d1 / (S * sigma * sqrtT);
     g.vega = S * pdf_d1 * sqrtT * 0.01; // change per 1% vol
 
-    if (type == OptionType::Call) {
+    if(type == OptionType::Call) {
         g.premium = S * cdf_d1 - K * exp_rT * cdf_d2;
         g.delta = cdf_d1;
         g.rho = K * T * exp_rT * cdf_d2 * 0.01; // change per 1% vol
@@ -50,6 +50,30 @@ std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType typ
     }
 
     return g;
+}
+
+std::optional<double> BlackScholes::calculatePremium(double K, double T, OptionType type, double S, double r, double sigma) {
+    if (T <= 0 || S <= 0 || K <= 0 || sigma < 0) {
+        return std::nullopt;
+    }
+
+    double d1 = (std::log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * std::sqrt(T));
+    double d2 = d1 - sigma * std::sqrt(T);
+
+    // pre-calculations
+    double exp_rT = std::exp(-r * T);
+    double cdf_d1 = normalCDF(d1);
+    double cdf_d2 = normalCDF(d2);
+    double cdf_neg_d1 = normalCDF(-d1);
+    double cdf_neg_d2 = normalCDF(-d2);
+
+    double premium{};
+    if(type == OptionType::Call)
+        premium = S * cdf_d1 - K * exp_rT * cdf_d2;
+    else // Put
+        premium = K * exp_rT * cdf_neg_d2 - S * cdf_neg_d1;
+    
+    return premium;
 }
 
 std::optional<double> BlackScholes::calculateIV(const Option& option, double S, double marketPrice, double r) {
