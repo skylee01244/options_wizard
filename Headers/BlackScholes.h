@@ -9,6 +9,6 @@ private:
     static double normalCDF(double x);
 
 public:
-    [[nodiscard]] static std::optional<Greeks> calculate(const Option& option, double spotPrice, double riskFreeRate, double volatility);
+    [[nodiscard]] static std::optional<Greeks> calculate(double K, double T, OptionType type, double spotPrice, double riskFreeRate, double volatility);
     [[nodiscard]] static std::optional<double> calculateIV( const Option& option, double spotPrice, double marketPrice, double riskFreeRate);
 };
