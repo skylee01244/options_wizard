@@ -13,15 +13,16 @@ inline void runFiniteDifferenceTest() {
     double r = 0.05;
     double sigma = 0.2;
     double epsilon = 0.01;
+    FlatVolatility tempVol(sigma);
 
-    std::optional<Greeks> result = BlackScholes::calculate(K, T, OptionType::Call, S, r, sigma);
+    std::optional<Greeks> result = BlackScholes::calculate(K, T, OptionType::Call, S, r, tempVol);
     if (!result) {
         std::cerr << "[FAIL] BlackScholes returned nullopt" << std::endl;
         return;
     }
 
-    std::optional<Greeks> up   = BlackScholes::calculate(K, T, OptionType::Call, S + epsilon, r, sigma);
-    std::optional<Greeks> down = BlackScholes::calculate(K, T, OptionType::Call, S - epsilon, r, sigma);
+    std::optional<Greeks> up   = BlackScholes::calculate(K, T, OptionType::Call, S + epsilon, r, tempVol);
+    std::optional<Greeks> down = BlackScholes::calculate(K, T, OptionType::Call, S - epsilon, r, tempVol);
     // (Price(S+h) - Price(S-h)) / 2h
     double numericalDelta = (up->premium - down->premium) / (2.0 * epsilon);
     double error = std::abs(result->delta - numericalDelta);

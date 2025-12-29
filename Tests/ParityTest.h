@@ -1,4 +1,5 @@
 #include "BlackScholes.h"
+#include "VolatilitySurface.h"
 #include <iostream>
 #include <cmath>
 
@@ -32,8 +33,9 @@ inline void runParityTest() {
     Option callOption(S, T, OptionType::Call);
     Option putOption(S, T, OptionType::Put);
 
-    std::optional<Greeks> callGreeks = BlackScholes::calculate(K, T, OptionType::Call, S, r, sigma);
-    std::optional<Greeks> putGreeks  = BlackScholes::calculate(K, T, OptionType::Put,  S, r, sigma);
+    FlatVolatility tempVol(sigma);
+    std::optional<Greeks> callGreeks = BlackScholes::calculate(K, T, OptionType::Call, S, r, tempVol);
+    std::optional<Greeks> putGreeks  = BlackScholes::calculate(K, T, OptionType::Put,  S, r, tempVol);
 
     if (callGreeks && putGreeks) {
         checkPutCallParity(*callGreeks, *putGreeks, callOption, S, r);
