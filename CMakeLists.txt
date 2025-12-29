@@ -9,8 +9,8 @@ add_executable(options_pricing_model
         BlackScholes.cpp
         Option.cpp
         OptionWizard.cpp
-        Headers/Strategy.h
         Strategy.cpp
+        VolatilitySurface.cpp
         Tests/FiniteDifferenceTest.h
         Tests/ParityTest.h
 )
