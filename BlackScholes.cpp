@@ -13,6 +13,18 @@ double BlackScholes::normalCDF(double x) {
     return 0.5 * (1.0 + std::erf(x / std::sqrt(2.0)));
 }
 
+double BlackScholes::getImpliedVol(double K, double S, double IV, double timeToExpiry) {
+    double k = std::log(K / S);
+
+    constexpr double SLOPE = -0.2;
+    constexpr double CONVEXITY = 1.5;
+
+    double skewAdjustment = (SLOPE * k) + (CONVEXITY * k * k);
+    double decay = (timeToExpiry > 0.1) ? (1.0 / std::sqrt(timeToExpiry)) : 1.0;
+
+    return std::max(0.01, IV + (skewAdjustment * decay));
+}
+
 std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType type, double S, double r, double sigma) {
     if (T <= 0 || S <= 0 || K <= 0 || sigma < 0) {
         return std::nullopt;
@@ -34,18 +46,18 @@ std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType typ
     Greeks g{};
 
     g.gamma = pdf_d1 / (S * sigma * sqrtT);
-    g.vega = S * pdf_d1 * sqrtT * 0.01; // change per 1% vol
+    g.vega = S * pdf_d1 * sqrtT;
 
     if(type == OptionType::Call) {
         g.premium = S * cdf_d1 - K * exp_rT * cdf_d2;
         g.delta = cdf_d1;
-        g.rho = K * T * exp_rT * cdf_d2 * 0.01; // change per 1% vol
+        g.rho = K * T * exp_rT * cdf_d2 * 0.01; // change per 1% rate
         g.theta = (double)(-(S * normalPDF(d1) * sigma) / (2 * sqrtT) - r * K * exp_rT * cdf_d2) / gbl::TRADING_DAYS;   // daily theta
 
     } else { // Put
         g.premium = K * exp_rT * cdf_neg_d2 - S * cdf_neg_d1;
         g.delta = cdf_d1 - 1.0;
-        g.rho = -K * T * exp_rT * cdf_neg_d2 * 0.01; // change per 1% vol
+        g.rho = -K * T * exp_rT * cdf_neg_d2 * 0.01; // change per 1% rate
         g.theta = (double)(-(S * normalPDF(d1) * sigma) / (2 * sqrtT) + r * K * exp_rT * cdf_neg_d2) / gbl::TRADING_DAYS;
     }
 
@@ -72,7 +84,7 @@ std::optional<double> BlackScholes::calculatePremium(double K, double T, OptionT
         premium = S * cdf_d1 - K * exp_rT * cdf_d2;
     else // Put
         premium = K * exp_rT * cdf_neg_d2 - S * cdf_neg_d1;
-    
+
     return premium;
 }
 
@@ -86,7 +98,7 @@ std::optional<double> BlackScholes::calculateIV(const Option& option, double S, 
         if (!result) return std::nullopt;
 
         double price = result->premium;
-        double vega = result->vega * 100.0;
+        double vega = result->vega;
 
         double diff = price - marketPrice;
         if (std::abs(diff) < EPSILON) {
@@ -94,7 +106,7 @@ std::optional<double> BlackScholes::calculateIV(const Option& option, double S, 
         }
 
         if (std::abs(vega) < 1e-8) {
-            return std::nullopt;
+            break;
         }
 
         sigma = sigma - (diff / vega);
