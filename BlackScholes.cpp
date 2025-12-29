@@ -6,8 +6,10 @@
 #include <numbers>
 #include <optional>
 
+static const double INVERSE_SQUARE_ROOT_2PI = 1.0 / std::sqrt(2.0 * std::numbers::pi);
+
 double BlackScholes::normalPDF(double x) {
-    return (1.0 / std::sqrt(2.0 * std::numbers::pi)) * std::exp(-0.5 * x * x);
+    return (INVERSE_SQUARE_ROOT_2PI) * std::exp(-0.5 * x * x);
 }
 
 double BlackScholes::normalCDF(double x) {
