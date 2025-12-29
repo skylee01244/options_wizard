@@ -3,6 +3,7 @@
 #include "Headers/BlackScholes.h"
 #include "Headers/Strategy.h"
 #include "Headers/Global.h"
+#include "Headers/VolatilitySurface.h"
 #include <optional>
 #include <stdexcept>
 #include <random>
@@ -10,17 +11,17 @@
 #include <future>
 #include <thread>
 
-double OptionWizard::getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, double sigma) {
+double OptionWizard::getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, const IVolatilitySurface& volSurface) {
     double K = i_option.getStrike();
     double T = futureTimeRemaining;
     OptionType type = i_option.getType();
-    double skewedSigma = BlackScholes::getImpliedVol(K, futureSpot, sigma, T);
+    double sigma = volSurface.getVol(K,T);
 
-    std::optional<double> premium = BlackScholes::calculatePremium(K, T, type, futureSpot, r, skewedSigma);
+    std::optional<double> premium = BlackScholes::calculatePremium(K, T, type, futureSpot, r, sigma);
     return premium.value_or(0.0);
 }
 
-result OptionWizard::simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, double sigma, double mu) {
+result OptionWizard::simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, const IVolatilitySurface& volSurface, double mu) {
 
     double totalCost = 0.0;
     Greeks strategyGreeks = {};
@@ -30,7 +31,7 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
         double K = leg.option.getStrike();
         double T = leg.option.getTimeToExpiry();
         OptionType type = leg.option.getType();
-        std::optional<Greeks> g = BlackScholes::calculate(K, T, type, current, r, sigma);
+        std::optional<Greeks> g = BlackScholes::calculate(K, T, type, current, r, volSurface);
         if(!g) throw std::runtime_error("Error pricing leg");
         totalCost += g->premium * leg.quantity;
 
@@ -50,8 +51,9 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     int simsPerThread = simulations / threadCount;
     std::vector<std::future<int>> futures;
 
-    double drift = (mu - 0.5 * sigma * sigma) * timeToTarget;
-    double vol = sigma * std::sqrt(timeToTarget);
+    double surfaceVol = volSurface.getVol(current, timeToTarget);
+    double drift = (mu - 0.5 * surfaceVol * surfaceVol) * timeToTarget;
+    double vol = surfaceVol * std::sqrt(timeToTarget);
 
     auto worker = [&](int iterations) -> int {
         static thread_local std::mt19937 gen = [](){
@@ -83,7 +85,7 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
                     if(leg.option.getType() == OptionType::Put)
                         legValue = std::max(0.0, leg.option.getStrike() - simulatedPrice);
                 } else {
-                    legValue = getEstimatedPrice(leg.option, simulatedPrice, timeRemaining, r, sigma);
+                    legValue = getEstimatedPrice(leg.option, simulatedPrice, timeRemaining, r, volSurface);
                 }
 
                 pathValue += legValue * leg.quantity;
@@ -105,7 +107,7 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
 
     double totalProjectedValue = 0.0;
     for(const StrategyLeg& leg : legs) {
-        double val = getEstimatedPrice(leg.option, target, timeRemaining, r, sigma);
+        double val = getEstimatedPrice(leg.option, target, timeRemaining, r, volSurface);
         totalProjectedValue += val * leg.quantity;
     }
 

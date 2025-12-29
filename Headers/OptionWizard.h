@@ -4,6 +4,7 @@
 #include "Option.h"
 #include "Strategy.h"
 #include "Greeks.h"
+#include "VolatilitySurface.h"
 
 struct result {
     std::string strategyName;
@@ -17,8 +18,8 @@ struct result {
 
 class OptionWizard {
 private:
-    static double getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, double sigma);
+    static double getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, const IVolatilitySurface& volSurface);
 
 public:
-    static result simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, double sigma, double mu);
+    static result simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, const IVolatilitySurface& volSurface, double mu);
 };
