@@ -1,5 +1,6 @@
 #include "Headers/BlackScholes.h"
 #include "Headers/Global.h"
+#include "Headers/VolatilitySurface.h"
 #include <cmath>
 #include <algorithm>
 #include <numbers>
@@ -13,19 +14,8 @@ double BlackScholes::normalCDF(double x) {
     return 0.5 * (1.0 + std::erf(x / std::sqrt(2.0)));
 }
 
-double BlackScholes::getImpliedVol(double K, double S, double IV, double timeToExpiry) {
-    double k = std::log(K / S);
-
-    constexpr double SLOPE = -0.2;
-    constexpr double CONVEXITY = 1.5;
-
-    double skewAdjustment = (SLOPE * k) + (CONVEXITY * k * k);
-    double decay = (timeToExpiry > 0.1) ? (1.0 / std::sqrt(timeToExpiry)) : 1.0;
-
-    return std::max(0.01, IV + (skewAdjustment * decay));
-}
-
-std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType type, double S, double r, double sigma) {
+std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType type, double S, double r, const IVolatilitySurface& volSurface) {
+    double sigma = volSurface.getVol(K, T);
     if (T <= 0 || S <= 0 || K <= 0 || sigma < 0) {
         return std::nullopt;
     }
@@ -94,7 +84,8 @@ std::optional<double> BlackScholes::calculateIV(const Option& option, double S, 
     double sigma = 0.2;
 
     for (int i{} ; i < MAX_ITERATIONS; i++) {
-        std::optional<Greeks> result = calculate(option.getStrike(), option.getTimeToExpiry(), option.getType(), S, r, sigma);
+        FlatVolatility tempVol(sigma);
+        std::optional<Greeks> result = calculate(option.getStrike(), option.getTimeToExpiry(), option.getType(), S, r, tempVol);
         if (!result) return std::nullopt;
 
         double price = result->premium;
@@ -119,7 +110,8 @@ std::optional<double> BlackScholes::calculateIV(const Option& option, double S, 
     double high_v = 5.0;
     for (int i = 0; i < 30; ++i) {
         double mid = low_v + (high_v - low_v) / 2.0;
-        std::optional<Greeks> greeks = calculate(option.getStrike(), option.getTimeToExpiry(), option.getType(), S, r, sigma);
+        FlatVolatility tempVol(mid);
+        std::optional<Greeks> greeks = calculate(option.getStrike(), option.getTimeToExpiry(), option.getType(), S, r, tempVol);
         double price = greeks ? greeks->premium : 0.0;
 
         if (std::abs(price - marketPrice) < EPSILON) return mid;

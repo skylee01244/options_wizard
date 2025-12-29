@@ -2,6 +2,7 @@
 #include <optional>
 #include "Greeks.h"
 #include "Option.h"
+#include "VolatilitySurface.h"
 
 class BlackScholes {
 private:
@@ -9,8 +10,7 @@ private:
     static double normalCDF(double x);
 
 public:
-    static double getImpliedVol(double K, double S, double IV, double timeToExpiry);
-    [[nodiscard]] static std::optional<Greeks> calculate(double K, double T, OptionType type, double spotPrice, double riskFreeRate, double volatility);
+    [[nodiscard]] static std::optional<Greeks> calculate(double K, double T, OptionType type, double spotPrice, double riskFreeRate, const IVolatilitySurface& volSurface);
     [[nodiscard]] static std::optional<double> calculatePremium(double K, double T, OptionType type, double S, double r, double sigma);
     [[nodiscard]] static std::optional<double> calculateIV( const Option& option, double spotPrice, double marketPrice, double riskFreeRate);
 };
