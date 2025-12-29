@@ -54,7 +54,17 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     double vol = sigma * std::sqrt(timeToTarget);
 
     auto worker = [&](int iterations) -> int {
-        static thread_local std::mt19937 gen(std::random_device{}());
+        static thread_local std::mt19937 gen = [](){
+            std::random_device rd;
+            auto now = std::chrono::high_resolution_clock::now();
+            std::seed_seq ss{
+                    static_cast<unsigned long long>(rd()),
+                    static_cast<unsigned long long>(now.time_since_epoch().count()),
+                    static_cast<unsigned long long>(std::hash<std::thread::id>{}(std::this_thread::get_id()))
+            };
+            return std::mt19937(ss);
+        }();
+
         std::normal_distribution<> d(0, 1);
         int threadProfitablePaths = 0;
 
