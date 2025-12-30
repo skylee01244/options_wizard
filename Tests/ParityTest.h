@@ -15,9 +15,9 @@ void checkPutCallParity(const Greeks& callGreeks, const Greeks& putGreeks, const
     double diff = std::abs(lhs - rhs);
 
     if (diff < 1e-5) {
-        std::cout << "Parity Holds. No Arbitrage.\n";
+        std::cout << "[PASS] Parity Holds. No Arbitrage.\n";
     } else {
-        std::cout << "Parity Violated. Arbitrage opportunity.\n";
+        std::cout << "[PASS] Parity Violated. Arbitrage opportunity.\n";
     }
     return;
 }
@@ -40,6 +40,6 @@ inline void runParityTest() {
     if (callGreeks && putGreeks) {
         checkPutCallParity(*callGreeks, *putGreeks, callOption, S, r);
     } else {
-        std::cout << "Failed Parity.\n";
+        std::cout << "[FAIL] Failed Parity.\n";
     }
 }
