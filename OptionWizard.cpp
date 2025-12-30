@@ -11,11 +11,11 @@
 #include <future>
 #include <thread>
 
-double OptionWizard::getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, const IVolatilitySurface& volSurface) {
+double OptionWizard::getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, const IVolatilitySurface& volSurface, double currentSpot) {
     double K = i_option.getStrike();
     double T = futureTimeRemaining;
     OptionType type = i_option.getType();
-    double sigma = volSurface.getVol(K,T);
+    double sigma = volSurface.getVol(K,T, currentSpot);
 
     std::optional<double> premium = BlackScholes::calculatePremium(K, T, type, futureSpot, r, sigma);
     return premium.value_or(0.0);
@@ -51,7 +51,7 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     int simsPerThread = simulations / threadCount;
     std::vector<std::future<int>> futures;
 
-    double surfaceVol = volSurface.getVol(current, timeToTarget);
+    double surfaceVol = volSurface.getVol(current, timeToTarget, current);
     double drift = (mu - 0.5 * surfaceVol * surfaceVol) * timeToTarget;
     double vol = surfaceVol * std::sqrt(timeToTarget);
 
@@ -70,10 +70,7 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
         std::normal_distribution<> d(0, 1);
         int threadProfitablePaths = 0;
 
-        for(int i{}; i < iterations; i++) {
-            double Z = d(gen);
-            double simulatedPrice = current * std::exp(drift + vol * Z);
-
+        auto simulatePath = [&](double simulatedPrice) {
             double pathValue = 0.0;
 
             for(const StrategyLeg& leg : legs) {
@@ -85,15 +82,26 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
                     if(leg.option.getType() == OptionType::Put)
                         legValue = std::max(0.0, leg.option.getStrike() - simulatedPrice);
                 } else {
-                    legValue = getEstimatedPrice(leg.option, simulatedPrice, timeRemaining, r, volSurface);
+                    legValue = getEstimatedPrice(leg.option, simulatedPrice, timeRemaining, r, volSurface, simulatedPrice);
                 }
-
                 pathValue += legValue * leg.quantity;
             }
-
             double pnl = pathValue - totalCost;
-            if(pnl > 0) threadProfitablePaths++;
+            return pnl;
+        };
+
+        for (int i = 0; i < iterations / 2; ++i) {
+            double Z = d(gen);
+
+            double price1 = current * std::exp(drift + vol * Z);
+            if (simulatePath(price1) > 0)
+                threadProfitablePaths++;
+
+            double price2 = current * std::exp(drift + vol * (-Z));
+            if (simulatePath(price2) > 0)
+                threadProfitablePaths++;
         }
+
         return threadProfitablePaths;
     };
 
@@ -106,8 +114,9 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     for(std::future<int>& f : futures) totalProfitablePaths += f.get();
 
     double totalProjectedValue = 0.0;
+
     for(const StrategyLeg& leg : legs) {
-        double val = getEstimatedPrice(leg.option, target, timeRemaining, r, volSurface);
+        double val = getEstimatedPrice(leg.option, target, timeRemaining, r, volSurface, target);
         totalProjectedValue += val * leg.quantity;
     }
 
