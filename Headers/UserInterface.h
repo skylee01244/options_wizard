@@ -24,6 +24,29 @@ namespace UI {
         }
     }
 
+    inline double getExpiry(const std::string& prompt, double min_days) {
+        double value;
+        while (true) {
+            std::cout << prompt;
+            if (std::cin >> value) {
+                if (value <= 0) {
+                    std::cout << "Must be positive";
+                    continue;
+                }
+                if (value < min_days) {
+                    std::cout << "[ERROR] Option cannot expire before your target date:"<< min_days << std::endl;
+                    continue;
+                }
+                return value;
+
+            } else {
+                std::cout << "Invalid type";
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
+        }
+    }
+
     void printTable(const std::vector<result>& results) {
         std::cout << "\n" << std::string(110, '-') << std::endl;
         printf("%-20s", "");
