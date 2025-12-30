@@ -13,6 +13,7 @@ add_executable(options_pricing_model
         VolatilitySurface.cpp
         Tests/FiniteDifferenceTest.h
         Tests/ParityTest.h
+        Tests/MonteCarloConvergenceTest.h
 )
 
 target_include_directories(options_pricing_model PRIVATE ${CMAKE_SOURCE_DIR}/Headers)
