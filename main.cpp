@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
     double i_current_stock_price = UI::getDouble(">> Current Stock Price: ");
     double i_target_price = UI::getDouble(">> Target Stock Price: ");
     double i_target_date = UI::getDouble(">> Target date: ");
+    double i_expiry_days = UI::getExpiry(">> Strategy Days to Expiration: ",i_target_date);
     double i_expected_return = UI::getDouble(">> Annual Expected Return % (default 8): ");
     i_expected_return = i_expected_return / 100;
     double r = 0.05;    // Risk-Free Rate
@@ -59,12 +60,17 @@ int main(int argc, char* argv[]) {
 
     std::vector<Strategy> strategies;
 
-    // A. Aggressive Bull: Long Call
-    strategies.push_back(Strategy::longCall(i_current_stock_price, 1.0)); // 1 Year expiry assumption
-    // B. Conservative Bull: Bull Call Spread
-    strategies.push_back(Strategy::bullCallSpread(i_current_stock_price, i_current_stock_price * 1.10, 1.0));
-    // C. Volatility Play: Straddle
-    strategies.push_back(Strategy::straddle(i_current_stock_price, 1.0));
+    // Bull
+    strategies.push_back(Strategy::longCall(i_current_stock_price, (i_expiry_days / gbl::TRADING_DAYS)));
+    strategies.push_back(Strategy::bullCallSpread(i_current_stock_price, i_current_stock_price * 1.10, (i_expiry_days / gbl::TRADING_DAYS)));
+    // Bear
+    strategies.push_back(Strategy::longPut(i_current_stock_price, (i_expiry_days / gbl::TRADING_DAYS)));
+    strategies.push_back(Strategy::bearPutSpread(i_current_stock_price, i_current_stock_price * 0.90, (i_expiry_days / gbl::TRADING_DAYS)));
+    // Volatility
+    strategies.push_back(Strategy::straddle(i_current_stock_price, (i_expiry_days / gbl::TRADING_DAYS)));
+    // Structure: Long 90% Put / Short 95% Put / Short 105% Call / Long 110% Call
+    strategies.push_back(Strategy::ironCondor(i_current_stock_price * 0.90, i_current_stock_price * 0.95, i_current_stock_price * 1.05, i_current_stock_price * 1.10, (i_expiry_days / gbl::TRADING_DAYS)));
+
 
 
     std::vector<result> results;
