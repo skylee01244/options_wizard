@@ -2,14 +2,14 @@
 #include <cmath>
 #include <algorithm>
 
-ParametricVolatility::ParametricVolatility(double currentSpot, double atmVol, double slope, double convexity)
-        : spot_(currentSpot), atmVol_(atmVol), slope_(slope), convexity_(convexity) {}
+ParametricVolatility::ParametricVolatility(double atmVol, double slope, double convexity)
+        : atmVol_(atmVol), slope_(slope), convexity_(convexity) {}
 
-double ParametricVolatility::getVol(double strike, double timeToExpiry) const {
-    if (spot_ <= 0.0 || strike <= 0.0 || timeToExpiry <= 0.0)
+double ParametricVolatility::getVol(double strike, double timeToExpiry, double spot) const {
+    if (spot <= 0.0 || strike <= 0.0 || timeToExpiry <= 0.0)
         return atmVol_;
 
-    const double moneyness = std::log(strike / spot_);
+    const double moneyness = std::log(strike / spot);
     const double smile = slope_ * moneyness + convexity_ * moneyness * moneyness;
 
     static constexpr double MinTime = 0.10;
