@@ -49,13 +49,13 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     int simulations = 100000;
     int threadCount = std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1;
     int simsPerThread = simulations / threadCount;
-    std::vector<std::future<int>> futures;
+    std::vector<std::future<std::pair<int, double>>> futures; // profitableCount, totalValueSum
 
     double surfaceVol = volSurface.getVol(current, timeToTarget, current);
     double drift = (mu - 0.5 * surfaceVol * surfaceVol) * timeToTarget;
     double vol = surfaceVol * std::sqrt(timeToTarget);
 
-    auto worker = [&](int iterations) -> int {
+    auto worker = [&](int iterations) -> std::pair<int, double> {
         static thread_local std::mt19937 gen = [](){
             std::random_device rd;
             auto now = std::chrono::high_resolution_clock::now();
@@ -68,7 +68,8 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
         }();
 
         std::normal_distribution<> d(0, 1);
-        int threadProfitablePaths = 0;
+        int ProfitablePaths = 0;
+        double threadSum = 0.0;
 
         auto simulatePath = [&](double simulatedPrice) {
             double pathValue = 0.0;
@@ -86,23 +87,27 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
                 }
                 pathValue += legValue * leg.quantity;
             }
-            double pnl = pathValue - totalCost;
-            return pnl;
+            return pathValue;
         };
 
         for (int i = 0; i < iterations / 2; ++i) {
             double Z = d(gen);
+            double pnl{};
 
             double price1 = current * std::exp(drift + vol * Z);
-            if (simulatePath(price1) > 0)
-                threadProfitablePaths++;
+            double val1 = simulatePath(price1);
+            threadSum += val1;
+            pnl = val1 - totalCost;
+            if (pnl > 0) ProfitablePaths++;
 
             double price2 = current * std::exp(drift + vol * (-Z));
-            if (simulatePath(price2) > 0)
-                threadProfitablePaths++;
+            double val2 = simulatePath(price2);
+            threadSum += val2;
+            pnl = val2 - totalCost;
+            if (pnl > 0) ProfitablePaths++;
         }
 
-        return threadProfitablePaths;
+        return {ProfitablePaths, threadSum};
     };
 
     for(int i = 0 ; i < threadCount ; i++) {
@@ -111,7 +116,13 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     }
 
     int totalProfitablePaths = 0;
-    for(std::future<int>& f : futures) totalProfitablePaths += f.get();
+    double grandTotalValue = 0.0;
+
+    for(std::future<std::pair<int,double>>& f : futures) {
+        auto result = f.get();
+        totalProfitablePaths += result.first;
+        grandTotalValue += result.second;
+    }
 
     double totalProjectedValue = 0.0;
 
@@ -122,6 +133,7 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
 
     double profitPercent = (totalCost != 0.0) ? ((totalProjectedValue - totalCost) / std::abs(totalCost)) * 100.0 : 0.0;
     double pop = static_cast<double>(totalProfitablePaths) / simulations;
+    double expectedValue = grandTotalValue / simulations;
 
     return {
             strategy.getName(),
@@ -129,6 +141,7 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
             totalProjectedValue,
             profitPercent,
             pop,
-            strategyGreeks
+            strategyGreeks,
+            expectedValue
     };
 }

@@ -13,6 +13,7 @@ struct result {
     double profitPercent;
     double pop;
     Greeks netGreeks;
+    double expectedValue;
 };
 
 
