@@ -51,9 +51,9 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     int simsPerThread = simulations / threadCount;
     std::vector<std::future<std::pair<int, double>>> futures; // profitableCount, totalValueSum
 
-    double surfaceVol = volSurface.getVol(current, timeToTarget, current);
-    double drift = (mu - 0.5 * surfaceVol * surfaceVol) * timeToTarget;
-    double vol = surfaceVol * std::sqrt(timeToTarget);
+    double marketVol = 0.20;
+    double drift = (mu - 0.5 * marketVol * marketVol) * timeToTarget;
+    double vol = marketVol * std::sqrt(timeToTarget);
 
     auto worker = [&](int iterations) -> std::pair<int, double> {
         static thread_local std::mt19937 gen = [](){
