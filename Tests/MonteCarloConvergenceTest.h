@@ -15,6 +15,7 @@ inline void runMonteCarloConvergenceTest() {
     double T = 1.0;
     double r = 0.05;
     double sigma = 0.2;
+    double expected_return = 0.05;
     double targetDateDays = T * gbl::TRADING_DAYS;
 
     FlatVolatility flatVol(sigma);
@@ -29,7 +30,7 @@ inline void runMonteCarloConvergenceTest() {
     Strategy strat = Strategy::longCall(K, T);
     ParametricVolatility volModel(sigma, 0.0, 0.0);
 
-    result mcResult = OptionWizard::simulateStrategy(strat, S, S, targetDateDays, r, volModel, r);
+    result mcResult = OptionWizard::simulateStrategy(strat, S, S, targetDateDays, r, volModel, expected_return, sigma);
 
     double mcFutureValue = mcResult.expectedValue;
     double mcPresentValue = mcFutureValue * std::exp(-r * T);
