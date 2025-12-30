@@ -17,7 +17,7 @@ double BlackScholes::normalCDF(double x) {
 }
 
 std::optional<Greeks> BlackScholes::calculate(double K, double T, OptionType type, double S, double r, const IVolatilitySurface& volSurface) {
-    double sigma = volSurface.getVol(K, T);
+    double sigma = volSurface.getVol(K, T, S);
     if (T <= 0 || S <= 0 || K <= 0 || sigma < 0) {
         return std::nullopt;
     }
