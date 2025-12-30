@@ -26,7 +26,7 @@ namespace UI {
 
     void printTable(const std::vector<result>& results) {
         std::cout << "\n" << std::string(110, '-') << std::endl;
-        printf("%-20s", "Strategy");
+        printf("%-20s", "");
         printf("%-10s", "Cost ($)");
         printf("%-15s", "Projected ($)");
         printf("%-13s", "Exp Val ($)");
@@ -42,9 +42,9 @@ namespace UI {
 
         for (const auto& res : results) {
             printf("%-20s", res.strategyName.c_str());
-            printf("%-10.2f", res.entryCost);
-            printf("%-15.2f", res.projectedValue);
-            printf("%-13.2f", res.expectedValue);
+            printf("%-10.3f", res.entryCost);
+            printf("%-15.3f", res.projectedValue);
+            printf("%-13.3f", res.expectedValue);
             printf("%-13.2f", res.profitPercent);
             printf("%-10.2f", (res.pop * 100.0));
             printf("%-8.2f", res.netGreeks.delta);
