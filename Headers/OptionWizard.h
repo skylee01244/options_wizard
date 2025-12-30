@@ -22,5 +22,5 @@ private:
     static double getEstimatedPrice(const Option& i_option, double futureSpot, double futureTimeRemaining, double r, const IVolatilitySurface& volSurface, double CurrentSpot);
 
 public:
-    static result simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, const IVolatilitySurface& volSurface, double mu);
+    static result simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, const IVolatilitySurface& volSurface, double mu, double sigma);
 };

@@ -21,7 +21,7 @@ double OptionWizard::getEstimatedPrice(const Option& i_option, double futureSpot
     return premium.value_or(0.0);
 }
 
-result OptionWizard::simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, const IVolatilitySurface& volSurface, double mu) {
+result OptionWizard::simulateStrategy(const Strategy& strategy, double current, double target, double daysToTarget, double r, const IVolatilitySurface& volSurface, double mu, double sigma) {
 
     double totalCost = 0.0;
     Greeks strategyGreeks = {};
@@ -51,9 +51,8 @@ result OptionWizard::simulateStrategy(const Strategy& strategy, double current, 
     int simsPerThread = simulations / threadCount;
     std::vector<std::future<std::pair<int, double>>> futures; // profitableCount, totalValueSum
 
-    double marketVol = 0.20;
-    double drift = (mu - 0.5 * marketVol * marketVol) * timeToTarget;
-    double vol = marketVol * std::sqrt(timeToTarget);
+    double drift = (mu - 0.5 * sigma * sigma) * timeToTarget;
+    double vol = sigma * std::sqrt(timeToTarget);
 
     auto worker = [&](int iterations) -> std::pair<int, double> {
         static thread_local std::mt19937 gen = [](){
